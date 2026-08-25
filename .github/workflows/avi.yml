@@ -1,0 +1,78 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    name: Terraform Deploy
+    runs-on: [self-hosted, Windows, X64]
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_SECRET_VALUE }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+    steps:
+
+      # 1. Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Azure Login using OIDC
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      # 3. Check Azure Login
+      - name: Verify Azure Login
+        shell: powershell
+        run: |
+          az account show
+
+      # 4. Check Terraform
+      - name: Terraform Version
+        shell: powershell
+        run: |
+          terraform version
+
+      # 5. Terraform Init
+      - name: Terraform Init
+        shell: powershell
+        run: |
+          terraform init
+
+      # 6. Terraform Format Check
+      - name: Terraform Format
+        shell: powershell
+        run: |
+          terraform fmt
+
+      # 7. Terraform Validate
+      - name: Terraform Validate
+        shell: powershell
+        run: |
+          terraform validate
+
+      # 8. Terraform Plan
+      - name: Terraform Plan
+        shell: powershell
+        run: |
+          terraform plan
