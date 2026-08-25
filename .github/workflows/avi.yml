@@ -5,17 +5,6 @@ on:
     branches:
       - main
 
-
-  pull_request:
-    branches:
-      - main
-
-  workflow_dispatch:
-
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   terraform:
     name: Terraform Deploy
@@ -29,49 +18,42 @@ jobs:
 
     steps:
 
-      # 1. Checkout code
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Azure Login using OIDC
-      - name: Azure Login
+      - name: Azure Login using Service Principal
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.ARM_CLIENT_ID }}
+          client-secret: ${{ secrets.ARM_SECRET_VALUE }}
           tenant-id: ${{ secrets.ARM_TENANT_ID }}
           subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
-      # 3. Check Azure Login
       - name: Verify Azure Login
         shell: powershell
         run: |
           az account show
 
-      # 4. Check Terraform
       - name: Terraform Version
         shell: powershell
         run: |
           terraform version
 
-      # 5. Terraform Init
       - name: Terraform Init
         shell: powershell
         run: |
           terraform init
 
-      # 6. Terraform Format Check
-      - name: Terraform Format
+      - name: Terraform Format Check
         shell: powershell
         run: |
           terraform fmt
 
-      # 7. Terraform Validate
       - name: Terraform Validate
         shell: powershell
         run: |
           terraform validate
 
-      # 8. Terraform Plan
       - name: Terraform Plan
         shell: powershell
         run: |
